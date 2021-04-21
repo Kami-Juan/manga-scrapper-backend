@@ -1,0 +1,16 @@
+version: "3.3"
+
+services:
+  postgres:
+    container_name: manga-migrator-db
+    image: postgres:9.6
+    restart: always
+    command: postgres -c listen_addresses='*'
+    ports:
+      - '5432:5432'
+    environment:
+      - LC_ALL=C.UTF-8
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=5432

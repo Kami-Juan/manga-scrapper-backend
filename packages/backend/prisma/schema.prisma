@@ -1,0 +1,59 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["selectRelationCount"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chapter {
+  id           String   @id @default(uuid())
+  url          String   @db.VarChar(250)
+  title        String   @db.VarChar(250)
+  fansub_title String   @db.VarChar(250)
+  fansub_url   String   @db.VarChar(250)
+  publish_date DateTime
+  viewed       Boolean  @default(false)
+  Manga        Manga    @relation(fields: [manga_id], references: [id])
+  manga_id     String
+}
+
+model List {
+  id          String  @id @default(uuid())
+  url         String  @db.VarChar(250)
+  title       String  @db.VarChar(250)
+  description String  @db.VarChar(250)
+  visibilily  Boolean @default(false)
+  followers   Decimal @db.Decimal(19, 0)
+  image_url   String? @db.VarChar(250)
+  User        User    @relation(fields: [user_id], references: [id])
+  user_id     String
+  Manga       Manga[]
+}
+
+model Manga {
+  id           String    @id @default(uuid())
+  url          String    @db.VarChar(250)
+  title        String    @db.VarChar(250)
+  score        Decimal   @default(0) @db.Decimal(19, 2)
+  booktype     String    @db.VarChar(250)
+  demography   String    @db.VarChar(250)
+  image_url    String?   @db.VarChar(250)
+  nfsw         Boolean   @default(false)
+  description  String?   @db.Text
+  status       String?   @db.VarChar(250)
+  other_titles String?   @db.VarChar(250)
+  years        String?   @db.VarChar(250)
+  List         List[]
+  Chapter      Chapter[]
+}
+
+model User {
+  id       String @id @default(uuid())
+  username String @db.VarChar(255)
+  password String @db.VarChar(255)
+  email    String @db.VarChar(250)
+  List     List[]
+}

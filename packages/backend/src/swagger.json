@@ -1,0 +1,112 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "Manga/Anime Scrapper",
+        "description": "All Endpoints",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    },
+    "servers": [
+        {
+            "url": "/api/v1/",
+            "description": "Local, dev or from Heroku"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Migration",
+            "description": "API for manga migrations"
+        }
+    ],
+    "paths": {
+        "/migration": {
+            "post": {
+                "tags": [
+                    "Migration"
+                ],
+                "summary": "Make a migration for all mangas in an account",
+                "requestBody": {
+                    "description": "Cat Object",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MakeMigrationDTO"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                          "application/json": {
+                            "schema": {
+                              "$ref": "#/components/schemas/MakeMigrationResponse"
+                            }
+                          }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+          "MakeMigrationDTO": {
+              "type": "object",
+              "properties": {
+                  "email": {
+                      "type": "string"
+                  },
+                  "password": {
+                      "type": "string"
+                  },
+                  "userId": {
+                      "type": "string"
+                  }
+              }
+          },
+          "MakeMigrationResponse": {
+              "type": "object",
+              "properties": {
+                  "lists": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "title":{
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "visibilily": {
+                            "type": "boolean"
+                          },
+                          "followers": {
+                            "type": "number"
+                          },
+                          "image_url": {
+                            "type": "string"
+                          },
+                          "user_id": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                  }
+              }
+          }
+        }
+    }
+}
