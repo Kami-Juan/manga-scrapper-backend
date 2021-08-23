@@ -1,15 +1,15 @@
 import { BaseController } from '../../../../core/infraestructure/BaseController';
-import { GetChapterDTO } from './GetChapterDTO';
-import { GetChapterErrors } from './GetChapterErrors';
-import { GetChapterUseCase } from './GetChapterUseCase';
+import { StoreMangaDTO } from './StoreMangaDTO';
+import { StoreMangaErrors } from './StoreMangaErrors';
+import { StoreMangaUseCase } from './StoreMangaUseCase';
 
-export class GetChapterController extends BaseController {
-  constructor(private useCase: GetChapterUseCase) {
+export class StoreMangaController extends BaseController {
+  constructor(private useCase: StoreMangaUseCase) {
     super();
   }
 
   async executeImpl(): Promise<any> {
-    const dto = (this.req.body as any) as GetChapterDTO;
+    const dto = (this.req.body as any) as StoreMangaDTO;
 
     try {
       const result = await this.useCase.execute(dto);
@@ -22,10 +22,14 @@ export class GetChapterController extends BaseController {
         const errors = result.value;
 
         switch (errors.constructor) {
-          case GetChapterErrors.ChapterNotFound:
+          case StoreMangaErrors.MangaNotFound:
             return this.forbidden(errors.errorValue().message);
-          case GetChapterErrors.ChapterMangaTimeout:
+          case StoreMangaErrors.MangaTimeout:
               return this.forbidden(errors.errorValue().message);
+          case StoreMangaErrors.MangaEmpty:
+              return this.forbidden(errors.errorValue().message);
+          case StoreMangaErrors.ListNotFound:
+              return this.notFound(errors.errorValue().message);
           default:
             return this.fail(errors.errorValue());
         }
