@@ -1,6 +1,7 @@
 import Prisma, { PrismaClient, Prisma as PrismaClt } from '@prisma/client';
 import axios from 'axios';
 import cheerio from 'cheerio';
+import puppeteer from 'puppeteer';
 
 interface IChapterRepository {
   getMangaChapters(url: string): Promise<Prisma.Chapter[]>;
@@ -15,9 +16,18 @@ export class ChapterRepository implements IChapterRepository {
   constructor(private ctx: PrismaClient) {}
 
   async getMangaData(url: string): Promise<Prisma.Manga> {
-    console.log(url);
+    const browser = await puppeteer.launch({
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
 
-    const { data: rawLink } = await axios.get<string>(url);
+    await page.goto(url, {
+      waitUntil: 'networkidle0'
+    });
+
+    const rawLink = await page.evaluate(() => document.documentElement.outerHTML);
+
     const $ = cheerio.load(rawLink);
 
     const years = $(
@@ -26,7 +36,10 @@ export class ChapterRepository implements IChapterRepository {
     const description = $(
       '.element-header-content-text>.element-description',
     ).text();
+    const image = $('.element-header-content>div>div>div>div>.book-thumbnail').attr('src');
+    const score = $('.element-header-content>div>div>div>div>.score').text()
     const status = $('.element-header-content-text>.book-status').text();
+    const title = $('.element-header-content-text>h2').text();
     const otherTitles: string[] = $(
       '.element-header-content-text>.badge.badge-pill',
     )
@@ -41,17 +54,20 @@ export class ChapterRepository implements IChapterRepository {
         return [...prev, $(el).text()];
       }, []);
 
+    await page.close();
+    await browser.close();
+
     return {
       description: description.trim(),
       status: status.trim(),
       other_titles: otherTitles.join(', '),
       years: years.replace(')', '').replace('(', '').trim(),
+      title,
       booktype: '',
       demography: '',
-      image_url: '',
-      score: new PrismaClt.Decimal(0),
-      title: '',
-      url: '',
+      image_url: image,
+      score: new PrismaClt.Decimal(parseFloat(score)),
+      url,
       id: '',
       nfsw: false,
     };
@@ -75,8 +91,22 @@ export class ChapterRepository implements IChapterRepository {
   }
 
   async getChapter(url: string): Promise<string[]> {
-    const { data: rawLink } = await axios.get<string>(url);
+    const browser = await puppeteer.launch({
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
+
+    await page.goto(url, {
+      waitUntil: 'networkidle0'
+    });
+
+    const rawLink = await page.evaluate(() => document.documentElement.outerHTML);
+
     const $ = cheerio.load(rawLink);
+
+    await page.close();
+    await browser.close();
 
     const textTag = $('.d-inline:nth-child(4).px-1>.nav-link').text().trim();
 
@@ -85,8 +115,22 @@ export class ChapterRepository implements IChapterRepository {
         'href',
       );
 
-      const { data: cascadeRawLink } = await axios.get<string>(cascadeLink);
+      const cascadeBrowser = await puppeteer.launch({
+        headless: true,
+      });
+      const cascadePage = await cascadeBrowser.newPage();
+      await cascadePage.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
+
+      await cascadePage.goto(cascadeLink, {
+        waitUntil: 'networkidle0'
+      });
+
+      const cascadeRawLink = await cascadePage.evaluate(() => document.documentElement.outerHTML);
+
       const $2 = cheerio.load(cascadeRawLink);
+
+      await cascadePage.close();
+      await cascadeBrowser.close();
 
       return $2('#main-container>div>img')
         .toArray()
@@ -99,8 +143,19 @@ export class ChapterRepository implements IChapterRepository {
   }
 
   async getMangaChapters(url: string): Promise<Prisma.Chapter[]> {
-    const { data } = await axios.get<string>(url);
-    const $ = cheerio.load(data);
+    const browser = await puppeteer.launch({
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
+
+    await page.goto(url, {
+      waitUntil: 'networkidle0'
+    });
+
+    const rawLink = await page.evaluate(() => document.documentElement.outerHTML);
+
+    const $ = cheerio.load(rawLink);
 
     const lastCaps = $('.chapters>ul>li').toArray();
     const firstsCaps = $('.chapters>ul>#chapters-collapsed>li').toArray();
