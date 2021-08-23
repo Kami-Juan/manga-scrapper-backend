@@ -24,7 +24,7 @@ export class GetChapterUseCase
   constructor(private chapterRepository: ChapterRepository) {}
   async execute(request?: GetChapterDTO): Promise<Response> {
     try {
-      const images = await this.chapterRepository.getChapter(request.url);
+      const images = await this.chapterRepository.getChapterKissManga(request.url);
 
       return right(
         Result.ok<GetListsMangaResponse>({

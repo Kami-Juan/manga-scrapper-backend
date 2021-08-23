@@ -38,7 +38,7 @@ export class GetChaptersUseCase
       );
 
       if (totalChapters === 0) {
-        const chapters = await this.chapterRepository.getMangaChapters(
+        const chapters = await this.chapterRepository.getMangaChaptersKissManga(
           manga.url,
         );
 

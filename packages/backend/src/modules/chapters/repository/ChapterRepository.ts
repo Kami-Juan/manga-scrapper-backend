@@ -5,12 +5,16 @@ import puppeteer from 'puppeteer';
 
 interface IChapterRepository {
   getMangaChapters(url: string): Promise<Prisma.Chapter[]>;
-  getChapter(url: string): Promise<string[]>;
+  getMangaChaptersKissManga(url: string): Promise<Prisma.Chapter[]>;
+  getChapterKissManga(url: string): Promise<string[]>;
   getChapterByManga(idManga: string): Promise<Prisma.Chapter[]>;
   getTotalChaptersByManga(idManga: string): Promise<number>;
   getMangaData(url: string): Promise<Prisma.Manga>;
   storeAllChapters(chapters: Prisma.Chapter[], mangaId: string): Promise<void>;
+  getMangaDataKissManga(url: string): Promise<Prisma.Manga>;
 }
+
+//#examples>div>div>div>div
 
 export class ChapterRepository implements IChapterRepository {
   constructor(private ctx: PrismaClient) {}
@@ -73,6 +77,74 @@ export class ChapterRepository implements IChapterRepository {
     };
   }
 
+  async getMangaDataKissManga(url: string): Promise<Prisma.Manga> {
+    const { data } = await axios.get(url);
+
+    const $ = cheerio.load(data);
+
+    const title = $('.media.manga-detail>.media-body>.title-manga').text();
+    const contentData = $('.media.manga-detail>.media-body>.description-update').text();
+    const image_url = $('.media.manga-detail>.media-left.cover-detail>img').attr('src');
+
+    const status = contentData[17].replace('Status:', '').trim();
+    const years = contentData[16].replace('Release:', '').trim();
+    const other_titles = contentData[1].replace('Alternative:', '').trim();
+
+    return {
+      title,
+      status,
+      other_titles,
+      image_url,
+      url,
+      years,
+      description: '',
+      booktype: '',
+      demography: '',
+      id: '',
+      score: new PrismaClt.Decimal(0),
+      nfsw: false,
+    };
+  }
+
+  async getMangaChaptersKissManga(url: string): Promise<Prisma.Chapter[]> {
+    const browser = await puppeteer.launch({
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
+
+    await page.goto(url, {
+      waitUntil: 'networkidle0'
+    });
+
+    const rawData = await page.evaluate(() => document.documentElement.outerHTML);
+
+    const $ = cheerio.load(rawData);
+
+    await page.close();
+    await browser.close();
+
+    const urls = $('#examples>div>div>div>div>ul>li');
+
+    const chapters: Prisma.Chapter[] = urls.toArray().reduce((prev, el) => {
+      const url = $('div>h4>a', el).attr('href');
+      const title = $('div>h4', el).text();
+
+      return [
+        ...prev,
+        {
+          title,
+          url,
+          fansub_title: '',
+          fansub_url: '',
+          publish_date: new Date(),
+        },
+      ]
+    }, []);
+
+    return chapters;
+  }
+
   async storeAllChapters(
     chapters: Prisma.Chapter[],
     mangaId: string,
@@ -88,6 +160,42 @@ export class ChapterRepository implements IChapterRepository {
 
   getChapterByManga(idManga: string): Promise<Prisma.Chapter[]> {
     return this.ctx.chapter.findMany({ where: { manga_id: idManga } });
+  }
+
+  async getChapterKissManga(url: string): Promise<string[]> {
+    const browser = await puppeteer.launch({
+      headless: true,
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36')
+
+    await page.goto(url, {
+      waitUntil: 'networkidle0'
+    });
+
+    await page.evaluate(() => {
+      localStorage.setItem('display_mode', '1');
+    });
+
+    await page.reload();
+
+    const links: string[] = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('.comic_wraCon.text-center>a'));
+
+      return links.reduce((prev, link) => {
+        const imageURL = link.querySelector('img').getAttribute('data-original');
+
+        return [
+          ...prev,
+          imageURL,
+        ]
+      }, []);
+    });
+
+    await page.close();
+    await browser.close();
+
+    return links;
   }
 
   async getChapter(url: string): Promise<string[]> {

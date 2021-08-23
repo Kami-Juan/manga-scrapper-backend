@@ -24,7 +24,8 @@ export class StoreMangaUseCase
 
   async execute(request?: StoreMangaDTO): Promise<Response> {
     try {
-      const manga = await this.chapterRepository.getMangaData(request.url);
+      // KissManga - TuMangaOnline
+      const manga = await this.chapterRepository.getMangaDataKissManga(request.url);
 
       if (!manga) {
         return left(new StoreMangaErrors.MangaEmpty()) as Response;
