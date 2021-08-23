@@ -12,7 +12,6 @@ import swaggerUi from 'swagger-ui-express';
 
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
-import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import { Strategy as CookieStrategy } from 'passport-cookie';
 
 const swaggerDoc = require('./swagger.json');
@@ -23,7 +22,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ['http://localhost:8080'],
+    origin: ['http://localhost:8080', 'app://.'],
     credentials: true,
   }),
 );
