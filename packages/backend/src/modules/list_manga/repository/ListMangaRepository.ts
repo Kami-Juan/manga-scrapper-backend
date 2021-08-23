@@ -1,19 +1,23 @@
 import Prisma, { PrismaClient, Prisma as PrismaClt } from '@prisma/client';
 
 import { PuppeteerListManga } from '../../migration/repository/MigrationRepository';
+import { ListManga } from '../domain/ListManga';
+import { ListMangaMapper } from '../mappers/ListMangaMapper';
 
 interface IListMangaRepository {
   storeAlllListManga(
     userId: string,
     lists: PuppeteerListManga[],
   ): Promise<Prisma.List[]>;
-  storeListManga(
+  storeListMangaByWebScrapping(
     userId: string,
     list: PuppeteerListManga,
   ): Promise<Prisma.List>;
+  storeListManga(userId: string, list: ListManga): Promise<Prisma.List>;
   getAllListByUser(userId: string): Promise<Prisma.List[]>;
   getMangasByListId(listId: string): Promise<Prisma.Manga[]>;
   getListById(listId: string): Promise<Prisma.List>;
+
 }
 
 export class ListMangaRepository implements IListMangaRepository {
@@ -26,7 +30,7 @@ export class ListMangaRepository implements IListMangaRepository {
     const listsMangaDB: Prisma.List[] = [];
 
     for (const list of lists) {
-      const listDB = await this.storeListManga(userId, list);
+      const listDB = await this.storeListMangaByWebScrapping(userId, list);
 
       listsMangaDB.push(listDB);
     }
@@ -34,7 +38,7 @@ export class ListMangaRepository implements IListMangaRepository {
     return listsMangaDB;
   }
 
-  async storeListManga(
+  async storeListMangaByWebScrapping(
     userId: string,
     list: PuppeteerListManga,
   ): Promise<Prisma.List> {
@@ -87,6 +91,29 @@ export class ListMangaRepository implements IListMangaRepository {
             Chapter: true,
           },
         },
+      },
+    });
+  }
+
+  storeListManga(userId: string, list: ListManga): Promise<Prisma.List> {
+    const listRaw = ListMangaMapper.toPersistence(list);
+
+    return this.ctx.list.create({
+      data: {
+        description: listRaw.description,
+        followers: new PrismaClt.Decimal(0),
+        title: listRaw.title,
+        url: '',
+        image_url: listRaw.image_url,
+        visibilily: true,
+        User: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+      include: {
+        Manga: true,
       },
     });
   }
