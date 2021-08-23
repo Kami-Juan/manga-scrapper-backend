@@ -36,6 +36,7 @@ export class MigrationRepository implements IMigrationRepository {
 
     const browser = await puppeteer.launch({
       headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
     await page.goto('https://lectortmo.com/login');
@@ -106,6 +107,7 @@ export class MigrationRepository implements IMigrationRepository {
 
     const browser = await puppeteer.launch({
       headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
 
