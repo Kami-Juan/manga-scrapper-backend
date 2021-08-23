@@ -1,7 +1,6 @@
 import { User } from '../../user/domain/User';
 import puppeteer from 'puppeteer';
 import { MigrationMap } from '../mappers/MigrationMapper';
-import { Prisma } from '@prisma/client';
 
 export interface PuppeteerListManga {
   id?: number;
