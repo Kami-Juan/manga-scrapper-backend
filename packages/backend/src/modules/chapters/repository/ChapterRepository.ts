@@ -14,8 +14,6 @@ interface IChapterRepository {
   getMangaDataKissManga(url: string): Promise<Prisma.Manga>;
 }
 
-//#examples>div>div>div>div
-
 export class ChapterRepository implements IChapterRepository {
   constructor(private ctx: PrismaClient) {}
 
